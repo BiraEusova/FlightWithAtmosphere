@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FlightBusinessModel;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -31,7 +32,7 @@ namespace FlightWithoutAtmosphere
                 chart1.ChartAreas[0].AxisY.Maximum = flightModel.YMax;
 
                 chart1.Series[0].Points.Clear();
-                chart1.Series[0].Points.AddXY(flightModel.X, flightModel.Y);
+                chart1.Series[0].Points.AddXY(flightModel.Body.X, flightModel.Body.Y);
                 outputTimeLabel.Text = flightModel.GetTime() + " sec";
             }
 
@@ -55,10 +56,10 @@ namespace FlightWithoutAtmosphere
 
             flightModel.ChangeValues();
 
-            chart1.Series[0].Points.AddXY(flightModel.X, flightModel.Y);           
+            chart1.Series[0].Points.AddXY(flightModel.Body.X, flightModel.Body.Y);           
             outputTimeLabel.Text = flightModel.GetTime() + " sec";
 
-            if (flightModel.Y <= 0) timer1.Stop();
+            if (flightModel.Body.Y <= 0) timer1.Stop();
         }
 
         private void stopButton_Click(object sender, EventArgs e)

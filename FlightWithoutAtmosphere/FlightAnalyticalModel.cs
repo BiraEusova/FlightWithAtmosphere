@@ -4,46 +4,34 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FlightWithoutAtmosphere
+namespace FlightBusinessModel
 {
     public class FlightAnalyticalModel
     {
-        const double dt = 0.01;
-        const double g = 9.81;
-        const double C = 0.15;
-        const double p = 1.29;
-
+        private Atmosphere atmosphere;
+        private Body body;
+        private const double dt = 0.01;
         private double a;
-        private double v0, vx, vy;
-        private double y0;
         private double t;
-        private double x, y, xMax, yMax;
-        //public double outputT;
-        private double S, m, k;
+        private double xMax, yMax;
+        private double k;
 
         public double XMax => xMax + 0.5;
         public double YMax => yMax + 0.5;
-        public double X => x;
-        public double Y => y;
-
+        public Body Body => body;
+        
         public FlightAnalyticalModel(double a, double v0, double y0, double S, double m)
         {
             this.a = a;
-            this.v0 = y0;
-            this.y0 = y0;
-            this.S = S;
-            this.m = m;
 
-            k = 0.5 * C * S * p / m;
+            body = new Body(S, m, v0, y0, a);
+            atmosphere = new Atmosphere();
 
-            vx = v0 * Math.Cos(a);
-            vy = v0 * Math.Sin(a);
-
+            k = 0.5 * atmosphere.C * body.S * atmosphere.rho / body.M;
+            
             t = 0;
-            x = 0;
-            y = y0;
 
-            double xAdd = vx * (Math.Sqrt(vy * vy + 2 * g * y0) - vy) / g;
+            double xAdd = body.Vx * (Math.Sqrt(body.Vy * body.Vy + 2 * atmosphere.G * body.Y0) - body.Vy) / atmosphere.G;
             // Если тело брошено с какой-то высоты y0, то обычная формула расчета 
             // максимальной дальности полета не подойдет (данная формула основана
             // на времени подъема тела до самой высокой точки), т.к. при падении относительно самой высокой точки полета
@@ -56,19 +44,25 @@ namespace FlightWithoutAtmosphere
             // но лучше на графике останется свободное место, чем он обрежется
 
 
-            xMax = v0 * v0 * Math.Sin(2 * a) / g + xAdd;
-            yMax = y0 + v0 * v0 * Math.Sin(a) * Math.Sin(a) / (2 * g);
+            xMax = body.V0 * body.V0 * Math.Sin(2 * a) / atmosphere.G + xAdd;
+            yMax = body.Y0 + body.V0 * body.V0 * Math.Sin(a) * Math.Sin(a) / (2 * atmosphere.G);
         }
 
         public void ChangeValues()
         {
             t += dt;
 
-            vx = vx - k * vx * Math.Sqrt(vx * vx + vy * vy) * dt;
-            vy = vy - (g + k * vy * Math.Sqrt(vx * vx + vy * vy)) * dt;
+            double sqrt = Math.Sqrt(body.Vx * body.Vx + body.Vy * body.Vy);
 
-            x = x + vx * dt;
-            y = y + vy * dt;
+            double newVx = body.Vx - k * body.Vx * Math.Sqrt(body.Vx * body.Vx + body.Vy * body.Vy) * dt;
+            double newVy = body.Vy - (atmosphere.G + k * body.Vy * Math.Sqrt(body.Vx * body.Vx + body.Vy * body.Vy)) * dt;
+
+            body.ChangeSpeed(newVx, newVy);
+
+            double newX = body.X + newVx * dt;
+            double newY = body.Y + newVy * dt;
+
+            body.ChangeCoordinates(newX, newY);
         }
 
         public string GetTime()
